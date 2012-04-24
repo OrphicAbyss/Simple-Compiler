@@ -4,6 +4,10 @@ Currently Pascal based compiler which outputs 68000 assembler.
 
 Deviation from tutorial:
 Unary Minus - Handled in factor which allowed for simpler asm output.
+Whitespace - Handled differently (large change). Generally ignored but can break
+             up identifiers which will cause a compiler error.
+Error Message - Added a position counter to point to the error in the code when
+                the code doesn't compile.
 
 Future goals:
 * Actually finish it

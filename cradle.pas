@@ -8,17 +8,36 @@ const LF = #10;
 {------------------------------------------------------------------------------}
 { Variable Declarations }
 var Look: char;              { Lookahead Character }
+var Position: integer;       { Position in stream }
 {------------------------------------------------------------------------------}
 { Read New Character From Input Stream }
 procedure GetChar;
 begin
    Read(Look);
+   Position := Position + 1;
+end;
+{------------------------------------------------------------------------------}
+{ Recognize White Space }
+function IsWhite(c: char): boolean;
+begin
+   IsWhite := c in [' ', TAB];
+end;
+{------------------------------------------------------------------------------}
+{ Skip Over White Space }
+procedure GetNonWhitespaceChar;
+begin
+   repeat
+      GetChar;
+   until not (IsWhite(Look));
 end;
 {------------------------------------------------------------------------------}
 { Report an Error }
 procedure Error(s: string);
+var LinePos: integer;
 begin
-   WriteLn;
+   for LinePos := 1 to Position-1 do
+      Write('-');
+   WriteLn('^');
    WriteLn(^G, 'Error: ', s, '.');
 end;
 {------------------------------------------------------------------------------}
@@ -38,8 +57,16 @@ end;
 { Match a Specific Input Character }
 procedure Match(x: char);
 begin
-   if Look = x then GetChar
+   if IsWhite(Look) then GetNonWhitespaceChar;
+   if Look = x then GetNonWhitespaceChar
    else Expected('''' + x + '''');
+end;
+{------------------------------------------------------------------------------}
+{ Test for a Specific Input Character }
+function LookAhead(x: char): boolean;
+begin
+   if IsWhite(Look) then GetNonWhitespaceChar;
+   LookAhead := Look = x;
 end;
 {------------------------------------------------------------------------------}
 { Recognize an Alpha Character }
@@ -88,7 +115,7 @@ begin
    Emit(s);
    WriteLn;
 end;
-{---------------------------------------------------------------}
+{-------------------------------------------------------------------------------}
 { Parse and Translate Parentheses }
 procedure Expression; Forward;
 
@@ -98,13 +125,13 @@ begin
    Expression;
    Match(')');
 end;
-{---------------------------------------------------------------}
+{-------------------------------------------------------------------------------}
 { Parse and Translate a Function or Variable }
 procedure Ident;
 var Name: string;
 begin
    Name := GetName;
-   if Look = '(' then begin
+   if LookAhead('(') then begin
       Match('(');
       Match(')');
       EmitLn('BSR ' + Name);
@@ -112,7 +139,7 @@ begin
    else
       EmitLn('MOVE ' + Name + '(PC),D0')
 end;
-{---------------------------------------------------------------}
+{-------------------------------------------------------------------------------}
 { Parse and Translate a Constant or Variable }
 procedure ConstVar;
 begin
@@ -121,7 +148,7 @@ begin
    else
       EmitLn('MOVE #' + GetNum + ',D0');
 end;
-{---------------------------------------------------------------}
+{-------------------------------------------------------------------------------}
 { Parse and Translate a Unary Minus }
 procedure UnaryMinus;
 begin
@@ -129,7 +156,7 @@ begin
    ConstVar;
    EmitLn('NEG D0');
 end;
-{---------------------------------------------------------------}
+{-------------------------------------------------------------------------------}
 { Parse and Translate a Math Factor }
 procedure Factor;
 begin
@@ -139,7 +166,7 @@ begin
       else ConstVar;
    end;
 end;
-{--------------------------------------------------------------}
+{------------------------------------------------------------------------------}
 { Recognize and Translate a Multiply }
 procedure Multiply;
 begin
@@ -147,7 +174,7 @@ begin
    Factor;
    EmitLn('MULS (SP)+,D0');
 end;
-{-------------------------------------------------------------}
+{------------------------------------------------------------------------------}
 { Recognize and Translate a Divide }
 procedure Divide;
 begin
@@ -199,7 +226,7 @@ begin
       end;
    end;
 end;
-{--------------------------------------------------------------}
+{------------------------------------------------------------------------------}
 { Parse and Translate an Assignment Statement }
 procedure Assignment;
 var Name: string;
@@ -214,7 +241,8 @@ end;
 { Initialize }
 procedure Init;
 begin
-   GetChar;
+   Position := 0;
+   GetNonWhitespaceChar;
    Assignment;
    if (Look <> CR) and (Look <> LF) then Expected('Newline');
 end;
@@ -223,5 +251,5 @@ end;
 begin
    Init;
 end.
-{-------------------------------------------------------------}
+{------------------------------------------------------------------------------}
 
