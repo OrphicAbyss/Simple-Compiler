@@ -1,0 +1,11 @@
+Following the "LET'S BUILD A COMPILER!" tutorial by Jack W. Crenshaw, Ph.D.
+
+Currently Pascal based compiler which outputs 68000 assembler.
+
+Deviation from tutorial:
+Unary Minus - Handled in factor which allowed for simpler asm output.
+
+Future goals:
+* Actually finish it
+* Convert to x86 asm
+* Might convert compiler to new language (bootstrap it?)
