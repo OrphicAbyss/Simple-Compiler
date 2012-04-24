@@ -3,6 +3,7 @@ program Cradle;
 {------------------------------------------------------------------------------}
 { Constant Declarations }
 const TAB = ^I;
+const CR = ^M;
 {------------------------------------------------------------------------------}
 { Variable Declarations }
 var Look: char;              { Lookahead Character }
@@ -97,11 +98,25 @@ begin
    Match(')');
 end;
 {---------------------------------------------------------------}
+{ Parse and Translate a Function or Variable }
+procedure Ident;
+var Name: string;
+begin
+   Name := GetName;
+   if Look = '(' then begin
+      Match('(');
+      Match(')');
+      EmitLn('BSR ' + Name);
+      end
+   else
+      EmitLn('MOVE ' + Name + '(PC),D0')
+end;
+{---------------------------------------------------------------}
 { Parse and Translate a Constant or Variable }
 procedure ConstVar;
 begin
    if IsAlpha(Look) then
-      EmitLn('MOVE ' + GetName + '(PC),D0')
+      Ident
    else
       EmitLn('MOVE #' + GetNum + ',D0');
 end;
@@ -150,7 +165,6 @@ begin
       case Look of
        '*': Multiply;
        '/': Divide;
-      else Expected('Mulop');
       end;
    end;
 end;
@@ -181,7 +195,6 @@ begin
       case Look of
        '+': Add;
        '-': Subtract;
-      else Expected('Addop');
       end;
    end;
 end;
@@ -191,6 +204,7 @@ procedure Init;
 begin
    GetChar;
    Expression;
+   if Look <> CR then Expected('Newline');
 end;
 {------------------------------------------------------------------------------}
 { Main Program }
