@@ -53,19 +53,25 @@ begin
 end;
 {------------------------------------------------------------------------------}
 { Get an Identifier }
-function GetName: char;
+function GetName: string;
 begin
    if not IsAlpha(Look) then Expected('Name');
-   GetName := UpCase(Look);
-   GetChar;
+   GetName := '';
+   while IsAlpha(Look) or IsDigit(Look) do begin
+      GetName := GetName + UpCase(Look);
+      GetChar;
+   end;
 end;
 {------------------------------------------------------------------------------}
 { Get a Number }
-function GetNum: char;
+function GetNum: string;
 begin
    if not IsDigit(Look) then Expected('Integer');
-   GetNum := Look;
-   GetChar;
+   GetNum := '';
+   while IsDigit(Look) do begin
+      GetNum := GetNum + Look;
+      GetChar;
+   end;
 end;
 {------------------------------------------------------------------------------}
 { Output a String with Tab }
@@ -91,11 +97,20 @@ begin
    Match(')');
 end;
 {---------------------------------------------------------------}
+{ Parse and Translate a Constant or Variable }
+procedure ConstVar;
+begin
+   if IsAlpha(Look) then
+      EmitLn('MOVE ' + GetName + '(PC),D0')
+   else
+      EmitLn('MOVE #' + GetNum + ',D0');
+end;
+{---------------------------------------------------------------}
 { Parse and Translate a Unary Minus }
 procedure UnaryMinus;
 begin
    Match('-');
-   EmitLn('MOVE #' + GetNum + ',D0');
+   ConstVar;
    EmitLn('NEG D0');
 end;
 {---------------------------------------------------------------}
@@ -105,7 +120,7 @@ begin
    case Look of
        '(': Parentheses;
        '-': UnaryMinus;
-      else EmitLn('MOVE #' + GetNum + ',D0');
+      else ConstVar;
    end;
 end;
 {--------------------------------------------------------------}
