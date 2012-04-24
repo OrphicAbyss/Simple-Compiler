@@ -3,7 +3,8 @@ program Cradle;
 {------------------------------------------------------------------------------}
 { Constant Declarations }
 const TAB = ^I;
-const CR = ^M;
+const CR = #13;
+const LF = #10;
 {------------------------------------------------------------------------------}
 { Variable Declarations }
 var Look: char;              { Lookahead Character }
@@ -198,13 +199,24 @@ begin
       end;
    end;
 end;
+{--------------------------------------------------------------}
+{ Parse and Translate an Assignment Statement }
+procedure Assignment;
+var Name: string;
+begin
+   Name := GetName;
+   Match('=');
+   Expression;
+   EmitLn('LEA ' + Name + '(PC),A0');
+   EmitLn('MOVE D0,(A0)')
+end;
 {------------------------------------------------------------------------------}
 { Initialize }
 procedure Init;
 begin
    GetChar;
-   Expression;
-   if Look <> CR then Expected('Newline');
+   Assignment;
+   if (Look <> CR) and (Look <> LF) then Expected('Newline');
 end;
 {------------------------------------------------------------------------------}
 { Main Program }
